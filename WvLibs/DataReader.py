@@ -8,8 +8,8 @@ class DataReader:
         self._anno_user_regex()
         self._read_raw_json(raw_json)
         self._read_annoed_data(annoed_json_dir)
-        print(self.data_dict)
-        
+        #print(self.data_dict)
+
     def _anno_user_regex(self):
         self.label_field_regex = re.compile('ann\d*\_label')
         self.annotator_id_regex = re.compile('(?<=ann)\d*(?=\_label)')
@@ -38,25 +38,25 @@ class DataReader:
             m_label = self.label_field_regex.match(current_key)
             if m_label:
                 raw_label_field = m_label.group()
-                print(raw_label_field)
+                #print(raw_label_field)
                 annotator_id = self.annotator_id_regex.search(raw_label_field).group()
-                print(annotator_id)
+                #print(annotator_id)
                 annotation_info_dict['annotator'] = annotator_id
                 label = dict_data[raw_label_field]
-                print(label)
+                #print(label)
                 annotation_info_dict['label'] = label
             m_conf = self.confident_field_regex.match(current_key)
             if m_conf:
                 raw_conf_field = m_conf.group()
                 confident = dict_data[raw_conf_field]
-                print(confident)
+                #print(confident)
                 annotation_info_dict['confident'] = confident
 
             m_remark = self.remark_field_regex.match(current_key)
             if m_remark:
                 raw_remark_field = m_remark.group()
                 remark = dict_data[raw_remark_field]
-                print(remark)
+                #print(remark)
                 annotation_info_dict['remark'] = remark
         return annotation_info_dict
 
