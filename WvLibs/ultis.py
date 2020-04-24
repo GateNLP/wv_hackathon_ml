@@ -1,7 +1,20 @@
 import nltk
+import os
 
 class ReaderPostProcessor:
-    def __init__(self, tokenizer='nltk', x_fields=['Claim', 'Explaination'], x_output_mode='concat', y_fields=['label'], y_output_mode='high_conf', keep_case=False, label2id=True):
+    def __init__(self, tokenizer='nltk', 
+            x_fields=['Claim', 'Explaination'], 
+            x_output_mode='concat', 
+            y_fields=['label'], 
+            y_output_mode='high_conf', 
+            keep_case=False, 
+            label2id=True, 
+            config=None,
+            word2id=False,
+            exteralWord2idFunction=None,
+            return_mask=False,
+            remove_single_list=True
+            ):
         self.tokenizer = tokenizer
         self.x_fields = x_fields
         self.x_output_mode = x_output_mode
@@ -9,6 +22,11 @@ class ReaderPostProcessor:
         self.y_output_mode = y_output_mode
         self.keep_case = keep_case
         self.label2id = label2id
+        self.word2id = word2id
+        self.exteralWord2idFunction = exteralWord2idFunction
+        self.config = config
+        self.return_mask = return_mask
+        self.remove_single_list = remove_single_list
         self.labelsFields = ['PubAuthAction', 'CommSpread', 'GenMedAdv', 'PromActs', 'Consp', 'VirTrans', 'VirOrgn', 'PubPrep', 'Vacc', 'Prot', 'SocAlrm', 'None']
         self.initProcessor()
 
@@ -17,6 +35,13 @@ class ReaderPostProcessor:
         if self.tokenizer == 'nltk':
             self.tokenizerProcessor = self.nltkTokenizer
 
+        if self.tokenizer == 'bert':
+            from transformers import BertTokenizer
+            bert_tokenizer_path = os.path.join(self.config['BERT'].get('bert_path'), 'tokenizer')
+            self.bert_tokenizer = BertTokenizer.from_pretrained(bert_tokenizer_path)
+            self.tokenizerProcessor = self.bertTokenizer
+            self.word2idProcessor = self.bertWord2id
+
 
     def postProcess(self, sample):
         split_x = []
@@ -24,15 +49,24 @@ class ReaderPostProcessor:
             current_rawx = sample[x_field]
             if self.keep_case == False:
                 current_rawx = current_rawx.lower()
+            split_x.append(current_rawx)
+        if self.x_output_mode == 'concat':
+            split_x = [' '.join(split_x)]
+            #print(split_x)
+
+        processed_x = []
+        for current_rawx in split_x:
             current_x = self.x_pipeline(current_rawx)
-            split_x.append(current_x)
-        x = self.output_x(split_x) 
+            processed_x.append(current_x)
+
+        x=processed_x
+
 
         split_y = []
         for y_field in self.y_fields:
             current_y_list = []
             for annotation in sample['annotations']:
-                print(annotation)
+                #print(annotation)
                 #current_label = annotation['label']
                 current_confident = annotation['confident']
                 #current_annotator = annotation['annotator']
@@ -44,22 +78,17 @@ class ReaderPostProcessor:
             current_y = self.select_y(current_y_list)
             split_y.append(current_y)
         y = split_y
-        y = self._removeYSingleList(y)
+
+        if self.remove_single_list:
+            x = self._removeSingleList(x)
+            y = self._removeSingleList(y)
         return x, y
 
-    def _removeYSingleList(self, y):
+    def _removeSingleList(self, y):
         if len(y) == 1:
             return y[0]
         else:
             return y
-
-    def output_x(self, split_x):
-        output_x = []
-        if self.x_output_mode == 'concat':
-            for item in split_x:
-                output_x += item
-
-        return output_x
 
     def select_y(self, current_y):
         #print(current_y)
@@ -76,15 +105,35 @@ class ReaderPostProcessor:
         return label_index
 
 
-
-
-
     def x_pipeline(self, raw_x):
         if self.tokenizer:
             raw_x = self.tokenizerProcessor(raw_x)
+        if self.word2id:
+            raw_x = self.word2idProcessor(raw_x)
         return raw_x
-
 
     def nltkTokenizer(self, text):
         return nltk.word_tokenize(text)
+
+    def bertTokenizer(self, text):
+        tokened = self.bert_tokenizer.tokenize(text)
+        #print(tokened)
+        #ided = self.bert_tokenizer.encode_plus(tokened, max_length=100, pad_to_max_length=True, is_pretokenized=True, add_special_tokens=True)['input_ids']
+        #print(ided)
+        return tokened
+
+    def bertWord2id(self,tokened):
+        encoded = self.bert_tokenizer.encode_plus(tokened, max_length=100, pad_to_max_length=True, is_pretokenized=True, add_special_tokens=True)
+        #print(encoded)
+        ided = encoded['input_ids']
+        if self.return_mask:
+            mask = encoded['attention_mask']
+            return ided, mask
+        else:
+            return ided
+
+
+
+
+
 
