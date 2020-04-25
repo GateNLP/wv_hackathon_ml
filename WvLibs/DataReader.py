@@ -28,7 +28,8 @@ class DataReader:
         for each_annoed_data in all_json_data:
             data_link = each_annoed_data['Link']
             annotation_info = self._get_annotation_info(each_annoed_data)
-            self.data_dict[data_link]['annotations'].append(annotation_info)
+            if len(annotation_info['label']) > 0:
+                self.data_dict[data_link]['annotations'].append(annotation_info)
 
             
     def _get_annotation_info(self, dict_data):

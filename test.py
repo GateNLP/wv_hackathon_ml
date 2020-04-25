@@ -21,20 +21,17 @@ postProcessor = ReaderPostProcessor(tokenizer='bert', config=config, word2id=Tru
 #postProcessor = ReaderPostProcessor()
 
 dataIter = WVdataIter(annoed_json_dir, raw_json_file, postProcessor=postProcessor.postProcess)
-#print(len(dataIter))
-#x, y = next(dataIter)
-#print(x)
-#print(y)
-#for item in dataIter:
-#    print(item)
+#print(next(dataIter))
 
-#dataReader = DataReader(annoed_json_dir, raw_json_file)
+#testIter = WVdataIter(annoed_json_dir, raw_json_file)
+#print(next(testIter))
+
+#batchIter = BatchIterBert(dataIter)
+#print(next(batchIter))
+
+
 
 batchIter = BatchIterBert(dataIter, filling_last_batch=True, postProcessor=maskedBertBatchProcessor)
-#for x, y, mask in batchIter:
-#    print(len(x))
-#    print(len(mask))
-
 net = BERT_Simple(config)
 mUlti = modelUlti(net, gpu=True)
 mUlti.train(batchIter)

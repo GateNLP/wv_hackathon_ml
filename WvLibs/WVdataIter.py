@@ -1,8 +1,10 @@
 from .DataReader import DataReader
+import random
 
 class WVdataIter(DataReader):
-    def __init__(self, annoed_json_dir, raw_json, min_anno_filter=1, postProcessor=None):
+    def __init__(self, annoed_json_dir, raw_json, min_anno_filter=1, postProcessor=None, shuffle=True):
         super().__init__(annoed_json_dir, raw_json)
+        self.shuffle = shuffle
         self.filterByMinAnno(min_anno_filter)
         self._reset_iter()
         self.postProcessor = postProcessor
@@ -30,6 +32,9 @@ class WVdataIter(DataReader):
 
         
     def __iter__(self):
+        if self.shuffle:
+            random.shuffle(self.all_links)
+
         self._reset_iter()
         return self
 
