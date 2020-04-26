@@ -3,7 +3,7 @@ import os
 
 class ReaderPostProcessor:
     def __init__(self, tokenizer='nltk', 
-            x_fields=['Claim', 'Explaination'], 
+            x_fields=['Claim', 'Explaination', 'Source_PageText'], 
             x_output_mode='concat', 
             y_fields=['label'], 
             y_output_mode='high_conf', 
@@ -123,7 +123,7 @@ class ReaderPostProcessor:
         return tokened
 
     def bertWord2id(self,tokened):
-        encoded = self.bert_tokenizer.encode_plus(tokened, max_length=100, pad_to_max_length=True, is_pretokenized=True, add_special_tokens=True)
+        encoded = self.bert_tokenizer.encode_plus(tokened, max_length=300, pad_to_max_length=True, is_pretokenized=True, add_special_tokens=True)
         #print(encoded)
         ided = encoded['input_ids']
         if self.return_mask:

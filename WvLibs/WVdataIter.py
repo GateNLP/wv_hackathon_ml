@@ -2,9 +2,16 @@ from .DataReader import DataReader
 import random
 
 class WVdataIter(DataReader):
-    def __init__(self, annoed_json_dir, raw_json, min_anno_filter=1, postProcessor=None, shuffle=True):
-        super().__init__(annoed_json_dir, raw_json)
+    def __init__(self, annoed_json_dir, raw_json, min_anno_filter=-1, postProcessor=None, shuffle=True, ignoreLabelList=[], ignoreUserList=[], confThres=-1, check_validation=True):
+        if min_anno_filter > 0:
+            ignore_empty = True
+        else:
+            ignore_empty = False
+        super().__init__(annoed_json_dir, raw_json, ignoreLabelList=ignoreLabelList, ignoreUserList=ignoreUserList, confThres=confThres, ignore_empty=ignore_empty)
+    #def __init__(self, *args, min_anno_filter=1, postProcessor=None, shuffle=True, **kwargs):
+    #    super().__init__(*args, kwargs)
         self.shuffle = shuffle
+        self.check_validation = check_validation
         self.filterByMinAnno(min_anno_filter)
         self._reset_iter()
         self.postProcessor = postProcessor
@@ -16,8 +23,12 @@ class WVdataIter(DataReader):
         for link in self.data_dict:
             num_annotations = len(self.data_dict[link]['annotations'])
             if num_annotations >= self.min_anno_filter:
-                if self._check_annotation_valid(self.data_dict[link]['annotations']):
+                if self.check_validation:
+                    if self._check_annotation_valid(self.data_dict[link]['annotations']):
+                        all_links.append(link)
+                else:
                     all_links.append(link)
+
         self.all_links = all_links
 
 
