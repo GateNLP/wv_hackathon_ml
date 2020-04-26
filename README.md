@@ -1,6 +1,16 @@
 # wv_hackathon_ml
-Machine learning models for wv hackathon
 
-python test.py UnannotatedJsonFile Folder2annotatedJsonFiles
+This is created for EUvsVirus Hackathon
 
-python test.py Poynter_datasetv3_en.json round1Results/
+## Crossvalidation of baseline 
+python crossvalidation.py RawJsonData Folder2AnnotatedData --configFile bert_path_config --cachePath cache_path_for_models
+
+e.g.
+python crossvalidation.py ~/Downloads/Sample_Dataset.json Allresults/ --configFile sampleConfig.cfg --cachePath /home/xingyi/wvcrossValBaselineWithSource/
+
+## Annotation Agreement measurement
+python agreementMeasure.py RawJsonData Folder2AnnotatedData agreement.tsv < --ignoreLabel label2ignore --ignoreUser annotator2ignor --min_anno_filter filterWithMinimalFrequency>
+
+e.g.
+python agreementMeasure.py Poynter_datasetv3_en.json Allresults/ agreement.tsv --ignoreLabel SocAlrm --ignoreUser 04 --min_anno_filter -1 
+
